@@ -208,6 +208,13 @@ function Select-RecordedPath {
         [string]$indexOrName = $null
     )
 
+    if (-not $indexOrName) { 
+        Write-Host "Available paths:" -ForegroundColor Green
+
+        $menuItems = $recordedPaths | ForEach-Object { "$($_.No): $($_.Name) - $($_.Path)" }
+        $selectedPath = Show-InteractivePathMenu "Select a Path" $menuItems
+        
+
     $recordedPaths = if (Test-Path $RecordedPathsFile) {
         $jsonContent = Get-Content $RecordedPathsFile | ConvertFrom-Json
         # Check if the content is null or the count is 0 for an array
@@ -396,6 +403,118 @@ function Remove-SelectedPath {
     $Paths.Value | ForEach-Object { "$($_.Name) : $($_.Path)" } | Out-File "C:\Users\$env:USERNAME\Documents\PowerShell\RecordedPaths.txt"
     Write-Host "The selected path '$($SelectedPath.Name) : $($SelectedPath.Path)' has been removed."
 }
+
+
+# Main menu for path management
+# Note: This function is a placeholder and should be replaced with actual functionality
+function Show-PathMenu {
+    do {
+        Clear-Host
+        Write-Host "Recorded Paths Menu" -ForegroundColor Cyan
+
+        Write-Host "1. Record New Path"
+        Write-Host "2. List Recorded Paths"
+        Write-Host "3. Select Path"
+        Write-Host "4. Remove Path"
+        Write-Host "5. Clear All Paths"
+        Write-Host "6. Advanced Options" -ForegroundColor Green
+        Write-Host "X. Exit"
+
+        $choice = Read-Host -Prompt "Enter your choice"
+
+        switch ($choice) {
+            "1" { New-RecordedPath }
+            "2" { Get-RecordedPaths }
+            "3" { Select-RecordedPath }
+            "4" { Remove-RecordedPath }
+            "5" { Clear-RecordedPaths }
+            "6" { Show-AdvancedMenu } 
+            "X" { break } 
+            default { Write-Warning "Invalid choice. Please try again." } 
+        }
+    } while($true)
+}
+
+
+# Advanced menu for additional options 
+# Example: Manage Paths JSON
+# Note: This function is a placeholder and should be replaced with actual functionality
+function Show-AdvancedMenu {
+    do {
+        # ... (rest of your advanced menu)
+
+        Write-Host "1. Manage Paths JSON"
+        Write-Host "2. ... (Additional Options)" 
+        Write-Host "B. Back to Main Menu"
+
+        $choice = Read-Host -Prompt "Enter your choice"
+
+        switch ($choice) {
+            "1" { Manage-PathsData } 
+            "2" { Other-Advanced-Feature }
+            "B" { break } 
+            default { Write-Warning "Invalid choice. Please try again." } 
+        }
+    } while($true)
+}
+
+function Invoke-PathsDataManagement {
+    do {
+        # ...
+
+        Write-Host "1. Edit a Path"
+        Write-Host "2. View JSON Data"
+        Write-Host "3. Export Paths"
+        Write-Host "4. Change JSON File Location" 
+        Write-Host "B. Back to Advanced Menu"
+
+        $choice = Read-Host -Prompt "Enter your choice"
+
+        switch ($choice) {
+            "1" { Edit-RecordedPath }
+            "2" { View-JSON }
+            # ... and so on 
+            "B" { break }  
+            # ... default case for invalid choices 
+        }
+    } while ($true)
+}
+
+
+function Show-InteractivePathMenu($title, $menuItems) {
+    Clear-Host
+    Write-Host $title -ForegroundColor Cyan
+    Write-Host "" # Add a blank line
+
+    $selectedItem = 0 # Initially select the first item
+
+    do {
+        for ($i = 0; $i -lt $menuItems.Count; $i++) {
+            if ($i -eq $selectedItem) {
+                Write-Host " > " -NoNewline -ForegroundColor Yellow
+            } else {
+                Write-Host "   " -NoNewline  # Just spacing
+            }
+            Write-Host $menuItems[$i] 
+        }
+
+        $input = $Host.UI.RawUI.ReadKey('IncludeKeyDown') 
+
+        switch ($input.VirtualKeyCode) {
+            38 { # Up arrow
+                if ($selectedItem -gt 0) { $selectedItem-- } 
+            }
+            40 { # Down arrow
+                if ($selectedItem -lt $menuItems.Count - 1) { $selectedItem++ }
+            }
+            13 { # Enter key - confirms selection
+                return $menuItems[$selectedItem]
+            }
+        }
+
+    } while ($true) # Keep looping until the user presses Enter
+}
+
 
 Set-Alias -Name "selectpath" -Value Select-RecordedPath
 Set-Alias -Name "path-set" -Value Select-RecordedPath
