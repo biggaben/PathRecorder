@@ -397,6 +397,8 @@ function Remove-SelectedPath {
     Write-Host "The selected path '$($SelectedPath.Name) : $($SelectedPath.Path)' has been removed."
 }
 
+
+
 Set-Alias -Name "selectpath" -Value Select-RecordedPath
 Set-Alias -Name "path-set" -Value Select-RecordedPath
 
