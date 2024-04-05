@@ -1,5 +1,17 @@
-{
-  "Name": "",
-  "No": 1,
-  "Path": "C:\\Users\\David"
-}
+[
+  {
+    "Name": "recorder",
+    "Path": "C:\\Users\\David\\PowerShellProfile\\Modules\\PathRecorder",
+    "IsQuickPath": false
+  },
+  {
+    "Name": "loasd",
+    "Path": "C:\\Users\\David\\PowerShellProfile\\Modules\\PathRecorder",
+    "IsQuickPath": false
+  },
+  {
+    "Name": "hej",
+    "Path": "C:\\Users\\David",
+    "IsQuickPath": false
+  }
+]
