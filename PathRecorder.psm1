@@ -2,11 +2,7 @@ $RecordedPathsFile = Join-Path $PSScriptRoot "recorded_paths.json"
 
 <#
 .SYNOPSIS
-<<<<<<< Updated upstream
-Records the current path with an optional name. Alias: createpath, path-create
-=======
 Records the current path with an optional name. Alias: recordpath, rpath
->>>>>>> Stashed changes
 
 .DESCRIPTION
 The New-RecordedPath function records the current path with an optional name. This is useful for quickly returning to a specific location in the file system. The recorded paths are stored in a file for persistence across sessions.
@@ -67,17 +63,10 @@ function New-RecordedPath {
     
     if ($name) {
         Write-Host "Path '$name -> $pathValue' recorded" -ForegroundColor Green
-<<<<<<< Updated upstream
         Write-Host "Return to this path with 'path-set $name'" -ForegroundColor Yellow
     } else {
         Write-Host "Path '$pathValue' recorded" -ForegroundColor Green
         Write-Host "Return to this path with 'path-set'" -ForegroundColor Blue
-=======
-        Write-Host "Return to this path with 'repath $name'" -ForegroundColor Yellow
-    } else {
-        Write-Host "Path '$pathValue' recorded" -ForegroundColor Green
-        Write-Host "Return to this path with 'repath'" -ForegroundColor Blue
->>>>>>> Stashed changes
     }
 }
 
@@ -113,11 +102,7 @@ function Set-LastPath {
         $jsonContent = Get-Content $RecordedPathsFile | ConvertFrom-Json
         # Check if the content is null or the count is 0 for an array
         if (-not $jsonContent -or $jsonContent.Count -eq 0) {
-<<<<<<< Updated upstream
             Write-Host "The recorded paths list is empty. Record new path with 'path-create'." -ForegroundColor Yellow
-=======
-            Write-Host "The recorded paths list is empty. Record new path with 'rpath'." -ForegroundColor Yellow
->>>>>>> Stashed changes
             @() # Return an empty array to avoid further null checks
             return
         } else {
@@ -175,11 +160,7 @@ function Get-RecordedPaths {
         $jsonContent = Get-Content $RecordedPathsFile | ConvertFrom-Json
         # Check if the content is null or the count is 0 for an array
         if (-not $jsonContent -or $jsonContent.Count -eq 0) {
-<<<<<<< Updated upstream
             Write-Host "The recorded paths list is empty. Create new path with 'path-create'." -ForegroundColor Yellow
-=======
-            Write-Host "The recorded paths list is empty. Record new path with 'rpath'." -ForegroundColor Yellow
->>>>>>> Stashed changes
             @() # Return an empty array to avoid further null checks
             return
         } else {
@@ -196,10 +177,6 @@ function Get-RecordedPaths {
 }
 
 
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 <#
 .SYNOPSIS
 Selects a recorded path by its index or name. Alias: , SelectPath sPath
@@ -234,11 +211,7 @@ function Select-RecordedPath {
         $jsonContent = Get-Content $RecordedPathsFile | ConvertFrom-Json
         # Check if the content is null or the count is 0 for an array
         if (-not $jsonContent -or $jsonContent.Count -eq 0) {
-<<<<<<< Updated upstream
             Write-Host "The recorded paths list is empty. Record new path with 'path-create'." -ForegroundColor Yellow
-=======
-            Write-Host "The recorded paths list is empty. Record new path with 'rpath'." -ForegroundColor Yellow
->>>>>>> Stashed changes
             @() # Return an empty array to avoid further null checks
             return
         } else {
@@ -275,11 +248,7 @@ function Select-RecordedPath {
         Set-Location $selectedPath
         Write-Host "Navigated to $selectedPath." -ForegroundColor Green
     } else {
-<<<<<<< Updated upstream
         Write-Host "The selected path does not exist or was not found. Use 'path-set' to select from available paths" -ForegroundColor Red
-=======
-        Write-Host "The selected path does not exist or was not found. Use 'spath' to select from available paths" -ForegroundColor Red
->>>>>>> Stashed changes
     }
 }
 
@@ -368,11 +337,7 @@ function Remove-RecordedPath {
 
 <#
 .SYNOPSIS
-<<<<<<< Updated upstream
 Clears all the recorded paths. Alias: path-clear, clearpaths
-=======
-Clears all the recorded paths. Alias: ClrPath
->>>>>>> Stashed changes
 
 .DESCRIPTION 
 The Clear-RecordedPaths function clears all the recorded paths. This is useful for resetting the list of recorded paths for any purpose like starting a new session, cleaning up after a task, or preparing for a new task.
@@ -387,11 +352,7 @@ None. You cannot pipe inputs to Clear-RecordedPaths.
 None. This function does not output any data.
 
 .EXAMPLE
-<<<<<<< Updated upstream
 PS> path-clear
-=======
-PS> ClrPath
->>>>>>> Stashed changes
 Clears all the recorded paths.
 
 #>
@@ -435,27 +396,6 @@ function Remove-SelectedPath {
     Write-Host "The selected path '$($SelectedPath.Name) : $($SelectedPath.Path)' has been removed."
 }
 
-<<<<<<< Updated upstream
-
-
-Set-Alias -Name "selectpath" -Value Select-RecordedPath
-Set-Alias -Name "path-set" -Value Select-RecordedPath
-
-Set-Alias -Name "createpath" -Value New-RecordedPath
-Set-Alias -Name "path-create" -Value New-RecordedPath
-
-Set-Alias -Name "setlastpath" -Value Set-LastPath
-Set-Alias -Name "path-reset" -Value Set-LastPath
-
-Set-Alias -Name "removepath" -Value Remove-RecordedPath
-Set-Alias -Name "path-remove" -Value Remove-RecordedPath
-
-Set-Alias -Name "clearpaths" -Value Clear-RecordedPaths
-Set-Alias -Name "path-clear" -Value Clear-RecordedPaths
-
-Set-Alias -Name "listpaths" -Value Get-RecordedPaths
-Set-Alias -Name "path-list" -Value Get-RecordedPaths
-=======
 Set-Alias -Name "selectpath" -Value Select-RecordedPath
 Set-Alias -Name "spath" -Value Select-RecordedPath
 
@@ -472,4 +412,3 @@ Set-Alias -Name "clrpath" -Value Clear-RecordedPaths
 
 Set-Alias -Name "listpaths" -Value Get-RecordedPaths
 Set-Alias -Name "lpath" -Value Get-RecordedPaths
->>>>>>> Stashed changes
