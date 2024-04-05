@@ -1,4 +1,38 @@
 $RecordedPathsFile = Join-Path $PSScriptRoot "recorded_paths.json"
+# Module Scoped Variable
+#$recordedPaths = @()
+
+function Invoke-LoadRecordedPaths {
+    # Directly manipulate the module-scoped variable
+    if (Test-Path $RecordedPathsFile) {
+        Get-Content $RecordedPathsFile | ConvertFrom-Json
+    } else {
+        @() # Return an empty array if the file doesn't exist
+    }
+}
+
+# Initial load of paths from file
+#Invoke-LoadRecordedPaths
+
+function Add-RecordedPath {
+    param (
+        [string]$Path,
+        [string]$Name = $null
+    )
+
+    $pathObject = [PSCustomObject]@{
+        Path = $Path
+        Name = $Name
+    }
+
+    $recordedPaths += $pathObject
+    Save-RecordedPaths # Assuming there's a function to save these
+}
+
+function Save-RecordedPaths {
+    $recordedPaths | ConvertTo-Json | Set-Content $RecordedPathsFile
+}
+
 
 <#
 .SYNOPSIS
@@ -51,16 +85,20 @@ function New-RecordedPath {
     $pathValue = (Get-Location).Path
 
     $pathObject = New-Object PSObject -Property @{
-        'No'  = $index
-        'Name' = $name
+        'No'  = $index 
+        'Name' = $name 
         'Path' = $pathValue
     }
     
     $recordedPaths += $pathObject
 
     # Convert the updated array back to JSON and save
-    $recordedPaths | ConvertTo-Json | Set-Content $RecordedPathsFile
-    
+    try {
+        $recordedPaths | ConvertTo-Json | Set-Content $RecordedPathsFile 
+    } catch {
+        Write-Error "Error saving paths to ${RecordedPathsFile}: $_"
+    } 
+
     if ($name) {
         Write-Host "Path '$name -> $pathValue' recorded" -ForegroundColor Green
         Write-Host "Return to this path with 'path-set $name'" -ForegroundColor Yellow
@@ -94,45 +132,29 @@ Sets "C:\MyFolder" as the last accessed path.
 
 #>
 function Set-LastPath {
-    param (
-        [string]$path
-    )
+    param( [string]$path )
 
-    $recordedPaths = if (Test-Path $RecordedPathsFile) {
+    if (Test-Path $RecordedPathsFile) {
         $jsonContent = Get-Content $RecordedPathsFile | ConvertFrom-Json
-        # Check if the content is null or the count is 0 for an array
+
+        # Check for empty content
         if (-not $jsonContent -or $jsonContent.Count -eq 0) {
             Write-Host "The recorded paths list is empty. Record new path with 'path-create'." -ForegroundColor Yellow
-            @() # Return an empty array to avoid further null checks
-            return
-        } else {
-            $jsonContent
+            return  # Exit if no paths are recorded
         }
+
+        # Update the "Last" property
+        $recordedPaths | ForEach-Object { 
+            $_.Last = ($_.Path -eq $path) 
+        }
+
+        # Save the changes back to the file
+        $recordedPaths | ConvertTo-Json | Set-Content $RecordedPathsFile
+
     } else {
         Write-Host "No recorded paths file found." -ForegroundColor Red
-        @() # Return an empty array to avoid further null checks
     }
-
-    # Assuming there's a dedicated property or mechanism to track the last set path
-    $recordedPaths = if (Test-Path $RecordedPathsFile) {
-        Get-Content $RecordedPathsFile | ConvertFrom-Json
-    } else {
-        @()
-    }
-
-    # This example simply sets the provided path as the last, considering a specific use case.
-    # Adjust based on how "last" path should be determined or updated.
-    $recordedPaths | ForEach-Object {
-        if ($_.Path -eq $path) {
-            $_.Last = $true
-        } else {
-            $_.PSObject.Properties.Remove('Last')
-        }
-    }
-
-    $recordedPaths | ConvertTo-Json | Set-Content $RecordedPathsFile
 }
-
 
 
 <# .SYNOPSIS
@@ -156,24 +178,24 @@ Retrieves all the recorded paths.
 
 #>
 function Get-RecordedPaths {
-    $recordedPaths = if (Test-Path $RecordedPathsFile) {
-        $jsonContent = Get-Content $RecordedPathsFile | ConvertFrom-Json
-        # Check if the content is null or the count is 0 for an array
-        if (-not $jsonContent -or $jsonContent.Count -eq 0) {
-            Write-Host "The recorded paths list is empty. Create new path with 'path-create'." -ForegroundColor Yellow
-            @() # Return an empty array to avoid further null checks
-            return
-        } else {
-            $jsonContent
-        }
-    } else {
-        Write-Host "No recorded paths file found." -ForegroundColor Red
-        @() # Return an empty array to avoid further null checks
-    }
+    $recordedPaths = Invoke-LoadRecordedPaths
+
+    if (-not $recordedPaths) { 
+        Invoke-LoadRecordedPaths  # Load data if it's not already present
+    } 
+
+    # Check if loading was successful
+    if (-not $recordedPaths) {
+        Write-Host "The recorded paths list is empty. Create new path with 'path-create'." -ForegroundColor Yellow
+        return 
+    } 
 
     # List available paths
     Write-Host "Available paths:" -ForegroundColor Green
-    $recordedPaths | ForEach-Object { $index = $_.No; $name = $_.Name; $path = $_.Path; Write-Host "$index`: $name - $path" -ForegroundColor Blue}
+    $recordedPaths | ForEach-Object { 
+        $index = $_.No; $name = $_.Name; $path = $_.Path; 
+        Write-Host "$index`: $name - $path" -ForegroundColor Blue
+    }
 }
 
 
@@ -213,7 +235,7 @@ function Select-RecordedPath {
 
         $menuItems = $recordedPaths | ForEach-Object { "$($_.No): $($_.Name) - $($_.Path)" }
         $selectedPath = Show-InteractivePathMenu "Select a Path" $menuItems
-        
+    }
 
     $recordedPaths = if (Test-Path $RecordedPathsFile) {
         $jsonContent = Get-Content $RecordedPathsFile | ConvertFrom-Json
@@ -290,57 +312,51 @@ function Remove-RecordedPath {
         [Parameter(Mandatory=$false, HelpMessage="The index or name of the recorded path to remove. If not provided, the user is prompted to select a path.")]
         [string]$indexOrName = $null
     )
-
+    # Load recorded paths
     $recordedPaths = if (Test-Path $RecordedPathsFile) {
-        $jsonContent = Get-Content $RecordedPathsFile | ConvertFrom-Json
-        # Check if the content is null or the count is 0 for an array
-        if (-not $jsonContent -or $jsonContent.Count -eq 0) {
-            Write-Host "The recorded paths list is empty." -ForegroundColor Yellow
-            @() # Return an empty array to avoid further null checks
-            return
-        } else {
-            $jsonContent
-        }
+        Get-Content $RecordedPathsFile | ConvertFrom-Json
     } else {
         Write-Host "No recorded paths file found." -ForegroundColor Red
-        @() # Return an empty array to avoid further null checks
+        return
+    }
+
+    # Check if the list is empty
+    if (-not $recordedPaths -or $recordedPaths.Count -eq 0) {
+        Write-Host "The recorded paths list is empty." -ForegroundColor Yellow
+        return
     }
 
     if (-not $indexOrName) {
-        # List available paths
+        # List available paths for selection
         Write-Host "Available paths:" -ForegroundColor Green
-        $recordedPaths | ForEach-Object { $index = $_.'No'; $name = $_.Name; $path = $_.Path; Write-Host "$index`: $name - $path" -ForegroundColor Blue }
-
-        # Prompt user to select by name or index
+        foreach ($i in 0..($recordedPaths.Count - 1)) {
+            Write-Host "$($i + 1): $(script:$recordedPaths[$i].Name) - $($recordedPaths[$i].Path)" -ForegroundColor Blue
+        }
         $indexOrName = Read-Host "Please select a path to remove by Name or Index"
     }
 
+    # Determine the path to remove
     $pathToRemove = $null
     if ($indexOrName -match '^\d+$') {
-        # If an index is specified, select by index
-        $pathToRemove = $recordedPaths | Where-Object { $_.'No' -eq [int]$indexOrName } | Select-Object -First 1
+        # Convert to zero-based index
+        $index = [int]$indexOrName - 1
+        if ($index -lt $recordedPaths.Count) {
+            $pathToRemove = $recordedPaths[$index]
+        }
     } else {
-        # If a name is specified, select by name
         $pathToRemove = $recordedPaths | Where-Object { $_.Name -eq $indexOrName } | Select-Object -First 1
     }
 
+    # Remove the selected path
     if ($pathToRemove) {
-        # Remove the selected path
-        $recordedPaths = $recordedPaths | Where-Object { $_ -ne $pathToRemove }
-
-        # Re-index the remaining paths
-        $index = 1
-        $recordedPaths = $recordedPaths | ForEach-Object {
-            $_.'No' = $index++
-            $_
-        }
-
-        $recordedPaths | ConvertTo-Json | Set-Content $RecordedPathsFile
-        Write-Host "Removed path: $($pathToRemove.Path)" -ForegroundColor Green
+        $recordedPaths = $recordedPaths | Where-Object { $_.Path -ne $pathToRemove.Path }
+        script:$recordedPaths | ConvertTo-Json | Set-Content $RecordedPathsFile -Force
+        Write-Host "Removed path: $($pathToRemove.Name) : $($pathToRemove.Path)" -ForegroundColor Green
     } else {
         Write-Host "The specified path was not found." -ForegroundColor Red
     }
 }
+
 
 
 <#
@@ -399,11 +415,16 @@ function Remove-SelectedPath {
         [ref]$Paths
     )
 
-    $Paths.Value = $Paths.Value | Where-Object { $_ -ne $SelectedPath }
-    $Paths.Value | ForEach-Object { "$($_.Name) : $($_.Path)" } | Out-File "C:\Users\$env:USERNAME\Documents\PowerShell\RecordedPaths.txt"
+    # Filter out the selected path
+    $Paths.Value = $Paths.Value | Where-Object { $_.Path -ne $SelectedPath.Path }
+
+    # Convert the updated paths list to JSON and save
+    $jsonContent = $Paths.Value | ConvertTo-Json
+    $jsonPath = "C:\Users\$env:USERNAME\Documents\PowerShell\RecordedPaths.json"
+    $jsonContent | Set-Content -Path $jsonPath
+
     Write-Host "The selected path '$($SelectedPath.Name) : $($SelectedPath.Path)' has been removed."
 }
-
 
 # Main menu for path management
 # Note: This function is a placeholder and should be replaced with actual functionality
