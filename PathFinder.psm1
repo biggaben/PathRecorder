@@ -6,7 +6,10 @@
 # Get the directory path of the current script
 
 # Construct the path to the JSON file
-$recordedPathsFile = "C:\\Users\\David\\PowerShellProfile\\Modules\\PathRecorder\\recorded_paths.json" 
+
+$userHome = $env:USERPROFILE    
+$rootDir= $PSScriptRoot
+$recordedPathsFile = "$rootDir\recorded_paths.json"
 
 # --- CORE FUNCTIONS ---
 function New-RecordedPath {
